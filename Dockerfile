@@ -28,11 +28,14 @@ RUN uv pip install \
     && fix-permissions "/home/${NB_USER}"
 
 COPY --chown=${NB_UID}:${NB_GID} ipython_startup/ /opt/cms-labs/ipython_startup/
+COPY --chown=${NB_UID}:${NB_GID} cms_labs_jupyter/ /opt/cms-labs/python/cms_labs_jupyter/
 COPY --chmod=755 notebook.entrypoint.sh /usr/local/bin/notebook.entrypoint.sh
 RUN ln -s /usr/local/bin/notebook.entrypoint.sh \
         /usr/local/bin/start-notebook.d/10-cms-labs.sh
 
 USER 1000
+
+ENV PYTHONPATH=/opt/cms-labs/python
 
 EXPOSE 8888
 

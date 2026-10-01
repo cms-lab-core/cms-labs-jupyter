@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import asyncio
+import base64
+import json
 import os
 import importlib.util
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 
 
 entrypoint = Path("/usr/local/bin/notebook.entrypoint.sh")
@@ -14,6 +18,17 @@ assert Path("/usr/local/bin/start-notebook.d/10-cms-labs.sh").is_symlink()
 assert importlib.util.find_spec("jupyterhub") is None
 assert shutil.which("jupyterhub-singleuser") is None
 assert shutil.which("start-singleuser.py") is None
+
+from cms_labs_jupyter.identity import ProxyIdentityProvider
+
+assert ProxyIdentityProvider is not None
+identity = {"sub": "42", "username": "student", "name": "Иван Иванов"}
+encoded_identity = base64.urlsafe_b64encode(json.dumps(identity).encode()).decode().rstrip("=")
+handler = SimpleNamespace(request=SimpleNamespace(headers={"X-CMS-Identity": encoded_identity}))
+user = asyncio.run(ProxyIdentityProvider().get_user(handler))
+assert user is not None
+assert user.username == "42"
+assert user.display_name == "Иван Иванов"
 
 with tempfile.TemporaryDirectory() as home:
     environment = {**os.environ, "HOME": home}

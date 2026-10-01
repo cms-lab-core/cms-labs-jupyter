@@ -15,6 +15,8 @@
   существующей Lab5-1 поверх актуального async API;
 - русский language pack, widgets, execution time, resource usage,
   collaboration и `nbgitpuller`;
+- proxy identity provider: Clabgate передаёт подтверждённые данные пользователя,
+  поэтому collaboration показывает имя пользователя вместо anonymous identity;
 - воспроизводимый `requirements.lock` с hashes.
 
 Образ слушает порт `8888` и работает пользователем `1000:100`. Домашний каталог
