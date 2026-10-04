@@ -5,11 +5,13 @@ FROM ${JUPYTER_BASE_IMAGE}
 
 USER 0
 
-# The distro repository is fixed by the dated parent image; this small runtime
-# utility receives security updates when the base image is intentionally bumped.
+# The distro repository is fixed by the dated parent image; these runtime
+# utilities receive security updates when the base image is intentionally bumped.
 # hadolint ignore=DL3008
-RUN apt-get update \
-    && apt-get install --yes --no-install-recommends netcat-openbsd \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
+        netcat-openbsd \
+        tshark \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,6 +31,7 @@ RUN uv pip install \
 
 COPY --chown=${NB_UID}:${NB_GID} ipython_startup/ /opt/cms-labs/ipython_startup/
 COPY --chown=${NB_UID}:${NB_GID} cms_labs_jupyter/ /opt/cms-labs/python/cms_labs_jupyter/
+COPY --chmod=755 cms_labs_jupyter/traffic_capture.py /usr/local/bin/cms-labs-pcap
 COPY --chmod=755 notebook.entrypoint.sh /usr/local/bin/notebook.entrypoint.sh
 RUN ln -s /usr/local/bin/notebook.entrypoint.sh \
         /usr/local/bin/start-notebook.d/10-cms-labs.sh

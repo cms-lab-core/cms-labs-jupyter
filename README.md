@@ -10,13 +10,15 @@
 - официальный `quay.io/jupyter/minimal-notebook` со штатным
   `start-notebook.py`; date tag и multi-arch digest закреплены в Dockerfile;
 - библиотеки для Python, RESTCONF/NETCONF, SSH и SNMP;
-- `%postman` и `%%ssh` из `ipython_startup`;
+- `%postman`, `%%ssh` и `%%capture_traffic` из `ipython_startup`;
 - compatibility adapter для синхронного `pysnmp ... oneliner.cmdgen` из
   существующей Lab5-1 поверх актуального async API;
 - русский language pack, widgets, execution time, resource usage,
   collaboration и `nbgitpuller`;
 - proxy identity provider: Clabgate передаёт подтверждённые данные пользователя,
   поэтому collaboration показывает имя пользователя вместо anonymous identity;
+- клиент namespace-local `cms-labs-capture` и ленивый PCAP viewer на
+  `ipywidgets`/`tshark`, доступный отдельно через `%view_traffic`;
 - воспроизводимый `requirements.lock` с hashes.
 
 Образ слушает порт `8888` и работает пользователем `1000:100`. Домашний каталог
@@ -42,6 +44,53 @@ docker run --rm -p 8888:8888 cms-labs-jupyter:local \
 Сам образ намеренно не реализует OIDC. В production Jupyter доступен только через
 workspace proxy `cms-labs-api`, который проверяет scoped session cookie. Публиковать
 Service напрямую с отключённым token нельзя.
+
+## Захват трафика
+
+В Kubernetes Clabgate передаёт notebook переменную `CMS_LABS_CAPTURE_URL`, а
+контроллер `cms-labs-capture` создаёт API внутри namespace попытки. Kubernetes
+credentials образу Jupyter не нужны.
+
+Код ячейки выполняется во время захвата, после чего PCAP скачивается в workspace
+и открывается встроенным просмотрщиком:
+
+```python
+%%capture_traffic r1:eth1 --filter "icmp" --timeout 15 --save captures/icmp.pcap
+run_ssh(nodes["r1"]["host"], ["ping -c 4 10.50.0.2"])
+```
+
+Поддерживаются `--packets`, `--max-bytes`, `--snaplen`, `--save` и `--no-view`.
+`--filter` является display filter для tshark: текущий Clabernetes capture API
+не принимает произвольный kernel BPF. Viewer показывает таблицу пакетов и
+лениво загружает protocol tree, hex dump и raw JSON выбранного кадра.
+
+Уже сохранённый файл можно повторно открыть без нового захвата:
+
+```python
+%view_traffic captures/icmp.pcap --filter "icmp" --limit 200
+```
+
+Вся реализация находится в одном файле `cms_labs_jupyter/traffic_capture.py`.
+Его публичные классы можно использовать независимо:
+
+```python
+from cms_labs_jupyter.traffic_capture import PcapViewer, TrafficCapture
+
+with TrafficCapture("r1", "eth1", duration=15) as capture:
+    generate_traffic()
+
+capture.save("captures/icmp.pcap")
+capture.delete()
+PcapViewer("captures/icmp.pcap", "icmp").display()
+```
+
+Для терминала тот же файл установлен как CLI:
+
+```bash
+cms-labs-pcap targets
+cms-labs-pcap capture r1:eth1 --timeout 15 --output captures/icmp.pcap
+cms-labs-pcap view captures/icmp.pcap --filter icmp
+```
 
 ## Зависимости
 
