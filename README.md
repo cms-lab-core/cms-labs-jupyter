@@ -117,7 +117,7 @@ GitHub Actions выполняет repository validation, Hadolint, CodeQL, по�
 
 - `sha-<commit>` для каждого commit в `main`;
 - `<version>` и `<major>.<minor>` для Git tag `v*`;
-- `latest` для `main`.
+- `latest` только для Git tag `v*`; push в `main` не изменяет стабильный alias.
 
 Образ автоматически пересобирается каждый понедельник и может быть пересобран
 вручную через `workflow_dispatch`. Deploy job в этом репозитории отсутствует:
