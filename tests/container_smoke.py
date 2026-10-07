@@ -34,7 +34,26 @@ assert user.username == "42"
 assert user.display_name == "Иван Иванов"
 
 with tempfile.TemporaryDirectory() as home:
-    environment = {**os.environ, "HOME": home}
+    environment = {
+        **os.environ,
+        "HOME": home,
+        "JUPYTER_APP_LAUNCHER_PATH": f"{home}/.cms-labs/launcher",
+    }
+    task = Path(home) / "task"
+    task.mkdir()
+    (task / "01-routing.ipynb").write_text(
+        json.dumps(
+            {
+                "cells": [
+                    {
+                        "cell_type": "markdown",
+                        "source": ["# Routing task\n"],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     subprocess.run([str(entrypoint)], check=True, env=environment)
     subprocess.run([str(entrypoint)], check=True, env=environment)
 
@@ -43,6 +62,14 @@ with tempfile.TemporaryDirectory() as home:
     assert (startup / "02-ssh-magic-cell.py").is_file()
     assert (startup / "03-capture-traffic.py").is_file()
     assert (startup / "04-view-traffic.py").is_file()
+    launcher_config = (
+        Path(home) / ".cms-labs/launcher/jp_app_launcher_tasks.yaml"
+    )
+    launcher_entries = json.loads(launcher_config.read_text(encoding="utf-8"))
+    assert launcher_entries[0]["title"] == "Routing task"
+    assert launcher_entries[0]["source"][0]["args"]["path"] == (
+        "task/01-routing.ipynb"
+    )
 
     check_magics = """
 shell = get_ipython()

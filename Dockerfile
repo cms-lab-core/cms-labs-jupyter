@@ -38,7 +38,8 @@ RUN ln -s /usr/local/bin/notebook.entrypoint.sh \
 
 USER 1000
 
-ENV PYTHONPATH=/opt/cms-labs/python
+ENV JUPYTER_APP_LAUNCHER_PATH=/home/jovyan/.cms-labs/launcher \
+    PYTHONPATH=/opt/cms-labs/python
 
 EXPOSE 8888
 

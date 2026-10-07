@@ -17,5 +17,6 @@ ipywidgets
 jupyter-collaboration
 jupyterlab-execute-time
 jupyter-resource-usage
+jupyter-app-launcher
 nbgitpuller
 pipdeptree

@@ -35,7 +35,9 @@ assert "uv pip uninstall --system jupyterhub" in dockerfile
 assert 'CMD ["start-notebook.py"]' in dockerfile
 assert "USER 1000" in dockerfile
 assert "tshark" in dockerfile
+assert "jupyter-app-launcher" in requirements
 assert (ROOT / "cms_labs_jupyter/traffic_capture.py").is_file()
+assert (ROOT / "cms_labs_jupyter/tasks_launcher.py").is_file()
 assert (ROOT / "ipython_startup/03-capture-traffic.py").is_file()
 assert (ROOT / "ipython_startup/04-view-traffic.py").is_file()
 

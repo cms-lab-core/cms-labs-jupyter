@@ -27,6 +27,8 @@ jobs:
           python-version: "3.13"
       - name: Validate repository
         run: python tests/validate_repository.py
+      - name: Test task launcher config
+        run: python -m unittest tests/test_tasks_launcher.py
       - name: Validate startup hook
         run: sh -n notebook.entrypoint.sh
       - name: Lint Dockerfile

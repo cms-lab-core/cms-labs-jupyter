@@ -17,6 +17,9 @@
   collaboration и `nbgitpuller`;
 - proxy identity provider: Clabgate передаёт подтверждённые данные пользователя,
   поэтому collaboration показывает имя пользователя вместо anonymous identity;
+- первый раздел Launcher «Задания» на базе `jupyter-app-launcher` со всеми
+  найденными `.ipynb`: подпись берётся из первого Markdown-заголовка, а при
+  ошибке — из имени файла;
 - клиент namespace-local `cms-labs-capture` и ленивый PCAP viewer на
   `ipywidgets`/`tshark`, доступный отдельно через `%view_traffic`;
 - воспроизводимый `requirements.lock` с hashes.
@@ -44,6 +47,20 @@ docker run --rm -p 8888:8888 cms-labs-jupyter:local \
 Сам образ намеренно не реализует OIDC. В production Jupyter доступен только через
 workspace proxy `cms-labs-api`, который проверяет scoped session cookie. Публиковать
 Service напрямую с отключённым token нельзя.
+
+## Задания в Launcher
+
+До старта JupyterLab hook синхронно обновляет репозиторий через `gitpuller`,
+находит в нём все `.ipynb` и создаёт конфигурацию `jupyter-app-launcher`.
+Clabgate передаёт образу:
+
+- `CMS_LABS_TASK_URL` — URL Git-репозитория;
+- `CMS_LABS_TASK_REF` — ветку или tag;
+- `CMS_LABS_TASK_DIR` — каталог клона, по умолчанию `task`.
+
+Скрытые каталоги, включая `.ipynb_checkpoints`, не попадают в список. Если URL
+и ref не заданы, сканируется уже существующий `/home/jovyan` — это удобно при
+локальном запуске образа с примонтированным workspace.
 
 ## Захват трафика
 
